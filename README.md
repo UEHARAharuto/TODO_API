@@ -24,4 +24,5 @@ curl -i -X DELETE http://localhost:8080/todos/1# TODO_API
 フレームワークとしてGinを利用した。メジャーなフレームワークであり、情報が多くある為使用。
 データベースはSQLiteを使用した。これにより、別途データベースをインストールせずともAPIを動かせる為使用。
 
-# TODO_API
+工夫点  
+404ステータスはresult.RowsAffected()を使って影響が0行の場合に返すようにした。
