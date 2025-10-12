@@ -1,6 +1,3 @@
-フレームワークとしてGinを利用した。メジャーなフレームワークであり、情報が多くある為に使用。
-データベースはSQLiteを使用した。これにより、別途データベースをインストールせずともAPIを動かせる。
-
 起動手順  
 go mod tidy  
 でパッケージをインストール
@@ -8,7 +5,7 @@ go mod tidy
 go run main.go  
 でサーバーを起動
 
-動作確認
+動作確認  
 curlコマンドを使って確認する。  
 
 POST  
@@ -22,3 +19,7 @@ curl -i -X PUT -H "Content-Type: application/json" -d '{"title":"タイトル"}'
   
 DELETE  
 curl -i -X DELETE http://localhost:8080/todos/1# TODO_API
+
+  
+フレームワークとしてGinを利用した。メジャーなフレームワークであり、情報が多くある為に使用。
+データベースはSQLiteを使用した。これにより、別途データベースをインストールせずともAPIを動かせる。
