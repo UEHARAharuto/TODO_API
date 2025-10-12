@@ -20,6 +20,8 @@ curl -i -X PUT -H "Content-Type: application/json" -d '{"title":"タイトル"}'
 DELETE  
 curl -i -X DELETE http://localhost:8080/todos/1# TODO_API
 
-  
-フレームワークとしてGinを利用した。メジャーなフレームワークであり、情報が多くある為に使用。
-データベースはSQLiteを使用した。これにより、別途データベースをインストールせずともAPIを動かせる。
+技術の選定理由  
+フレームワークとしてGinを利用した。メジャーなフレームワークであり、情報が多くある為使用。
+データベースはSQLiteを使用した。これにより、別途データベースをインストールせずともAPIを動かせる為使用。
+
+# TODO_API
