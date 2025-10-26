@@ -4,7 +4,6 @@ import (
 	"TODO_API/db"
 	"TODO_API/model"
 	"database/sql"
-	"log"
 	"net/http"
 	"time"
 
@@ -32,17 +31,11 @@ func CreateTodo(c *gin.Context) {
 		status = "pending"
 	}
 
-	priority := req.Priority
-	if priority == 0 {
-		priority = 100
-	}
-
 	sql := "INSERT INTO todos(title, status, priority, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
 	now := time.Now()
 
-	_, err := db.DB.Exec(sql, req.Title, status, priority, now, now)
+	_, err := db.DB.Exec(sql, req.Title, status, 100, now, now)
 	if err != nil {
-		log.Printf("ERROR: Failed to create todo: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -67,7 +60,6 @@ func GetTodos(c *gin.Context) {
 	}
 
 	if err != nil {
-		log.Printf("ERROR: Failed to get todos: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -78,7 +70,6 @@ func GetTodos(c *gin.Context) {
 		var todo model.Todo
 		err := rows.Scan(&todo.ID, &todo.Title, &todo.Status, &todo.Priority, &todo.CreatedAt, &todo.UpdatedAt)
 		if err != nil {
-			log.Printf("ERROR: Failed to scan todo row: %v", err)
 			c.Status(http.StatusInternalServerError)
 			return
 		}
@@ -114,25 +105,18 @@ func UpdateTodo(c *gin.Context) {
 		return
 	}
 
-	priority := req.Priority
-	if priority == 0 {
-		priority = 100
-	}
-
-	sql := "UPDATE todos SET title = ?, status = ?, priority = ?, updated_at = ? WHERE id = ?"
+	sql := "UPDATE todos SET title = ?, status = ?, updated_at = ? WHERE id = ?"
 	now := time.Now()
 
-	result, err := db.DB.Exec(sql, req.Title, req.Status, priority, now, id)
+	result, err := db.DB.Exec(sql, req.Title, req.Status, now, id)
 	if err != nil {
-		log.Printf("ERROR: Failed to update todo: %v", err)
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		log.Printf("ERROR: Failed to get rows affected on update: %v", err)
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 	if rowsAffected == 0 {
@@ -149,15 +133,13 @@ func DeleteTodo(c *gin.Context) {
 
 	result, err := db.DB.Exec(sql, id)
 	if err != nil {
-		log.Printf("ERROR: Failed to delete todo: %v", err)
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		log.Printf("ERROR: Failed to get rows affected on delete: %v", err)
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 	if rowsAffected == 0 {
