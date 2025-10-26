@@ -13,7 +13,7 @@ import (
 func CreateTodo(c *gin.Context) {
 	var req model.CreateTodoRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
@@ -67,7 +67,17 @@ func GetTodos(c *gin.Context) {
 		todos = append(todos, todo)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"todos": todos})
+	var responses []model.TodoResponse
+	for _, todo := range todos {
+		responses = append(responses, model.TodoResponse{
+			ID:        todo.ID,
+			Title:     todo.Title,
+			Status:    todo.Status,
+			UpdatedAt: todo.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"todos": responses})
 }
 
 func UpdateTodo(c *gin.Context) {
@@ -83,13 +93,12 @@ func UpdateTodo(c *gin.Context) {
 
 	result, err := db.DB.Exec(sql, req.Title, req.Status, now, id)
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		c.Status(http.StatusNotImplemented)
 		c.Status(http.StatusNotImplemented)
 		return
 	}
