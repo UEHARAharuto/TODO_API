@@ -32,10 +32,15 @@ func CreateTodo(c *gin.Context) {
 		status = "pending"
 	}
 
+	priority := req.Priority
+	if priority == 0 {
+		priority = 100
+	}
+
 	sql := "INSERT INTO todos(title, status, priority, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
 	now := time.Now()
 
-	_, err := db.DB.Exec(sql, req.Title, status, 100, now, now)
+	_, err := db.DB.Exec(sql, req.Title, status, priority, now, now)
 	if err != nil {
 		log.Printf("ERROR: Failed to create todo: %v", err)
 		c.Status(http.StatusInternalServerError)
@@ -109,10 +114,10 @@ func UpdateTodo(c *gin.Context) {
 		return
 	}
 
-	sql := "UPDATE todos SET title = ?, status = ?, updated_at = ? WHERE id = ?"
+	sql := "UPDATE todos SET title = ?, updated_at = ? WHERE id = ?"
 	now := time.Now()
 
-	result, err := db.DB.Exec(sql, req.Title, req.Status, now, id)
+	result, err := db.DB.Exec(sql, req.Title, now, id)
 	if err != nil {
 		log.Printf("ERROR: Failed to update todo: %v", err)
 		c.Status(http.StatusInternalServerError)
