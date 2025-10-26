@@ -125,7 +125,7 @@ func UpdateTodo(c *gin.Context) {
 	result, err := db.DB.Exec(sql, req.Title, req.Status, priority, now, id)
 	if err != nil {
 		log.Printf("ERROR: Failed to update todo: %v", err)
-		c.Status(http.StatusNotImplemented)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
