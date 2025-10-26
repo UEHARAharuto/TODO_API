@@ -26,3 +26,7 @@ type TodoResponse struct {
 	Status    string    `json:"status"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
+	Priority  int       `json:"priority"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
