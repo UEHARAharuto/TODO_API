@@ -17,10 +17,16 @@ func CreateTodo(c *gin.Context) {
 		return
 	}
 
-	sql := "INSERT INTO todos(title, created_at, updated_at) VALUES (?, ?, ?)"
+	// リクエストでStatusが指定されなかった場合、デフォルト値 'pending' を設定
+	status := todo.Status
+	if status == "" {
+		status = "pending"
+	}
+
+	sql := "INSERT INTO todos(title, status, created_at, updated_at) VALUES (?, ?, ?, ?)"
 	now := time.Now()
 
-	_, err := db.DB.Exec(sql, todo.Title, now, now)
+	_, err := db.DB.Exec(sql, todo.Title, status, now, now)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
@@ -34,11 +40,13 @@ func GetTodos(c *gin.Context) {
 	var rows *sql.Rows
 	var err error
 
+	sqlBase := "SELECT id, title, status, created_at, updated_at FROM todos"
+
 	if query != "" {
-		sql := "SELECT id, title, created_at, updated_at FROM todos WHERE title LIKE ?"
+		sql := sqlBase + " WHERE title LIKE ?"
 		rows, err = db.DB.Query(sql, "%"+query+"%")
 	} else {
-		sql := "SELECT id, title, created_at, updated_at FROM todos"
+		sql := sqlBase
 		rows, err = db.DB.Query(sql)
 	}
 
@@ -51,13 +59,14 @@ func GetTodos(c *gin.Context) {
 	var todos []model.Todo
 	for rows.Next() {
 		var todo model.Todo
-		err := rows.Scan(&todo.ID, &todo.Title, &todo.CreatedAt, &todo.UpdatedAt)
+		err := rows.Scan(&todo.ID, &todo.Title, &todo.Status, &todo.CreatedAt, &todo.UpdatedAt)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
 			return
 		}
 		todos = append(todos, todo)
 	}
+
 	c.JSON(http.StatusOK, gin.H{"todos": todos})
 }
 
@@ -65,22 +74,22 @@ func UpdateTodo(c *gin.Context) {
 	id := c.Param("id")
 	var todo model.Todo
 	if err := c.ShouldBindJSON(&todo); err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 
-	sql := "UPDATE todos SET title = ?, updated_at = ? WHERE id = ?"
+	sql := "UPDATE todos SET title = ?, status = ?, updated_at = ? WHERE id = ?"
 	now := time.Now()
 
-	result, err := db.DB.Exec(sql, todo.Title, now, id)
+	result, err := db.DB.Exec(sql, todo.Title, todo.Status, now, id)
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 	if rowsAffected == 0 {
@@ -97,13 +106,13 @@ func DeleteTodo(c *gin.Context) {
 
 	result, err := db.DB.Exec(sql, id)
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 	if rowsAffected == 0 {

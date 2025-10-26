@@ -3,8 +3,9 @@ package model
 import "time"
 
 type Todo struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
-	Title     string    `json:"title" gorm:"not null"`
+	ID        uint      `json:"id"`
+	Title     string    `json:"title"`
+	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
