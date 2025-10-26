@@ -114,10 +114,15 @@ func UpdateTodo(c *gin.Context) {
 		return
 	}
 
-	sql := "UPDATE todos SET title = ?, updated_at = ? WHERE id = ?"
+	priority := req.Priority
+	if priority == 0 {
+		priority = 100
+	}
+
+	sql := "UPDATE todos SET title = ?, status = ?, priority = ?, updated_at = ? WHERE id = ?"
 	now := time.Now()
 
-	result, err := db.DB.Exec(sql, req.Title, now, id)
+	result, err := db.DB.Exec(sql, req.Title, req.Status, priority, now, id)
 	if err != nil {
 		log.Printf("ERROR: Failed to update todo: %v", err)
 		c.Status(http.StatusInternalServerError)
