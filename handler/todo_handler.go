@@ -11,8 +11,8 @@ import (
 )
 
 func CreateTodo(c *gin.Context) {
-	var todo model.Todo
-	if err := c.ShouldBindJSON(&todo); err != nil {
+	var req model.CreateTodoRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -20,7 +20,7 @@ func CreateTodo(c *gin.Context) {
 	sql := "INSERT INTO todos(title, created_at, updated_at) VALUES (?, ?, ?)"
 	now := time.Now()
 
-	_, err := db.DB.Exec(sql, todo.Title, now, now)
+	_, err := db.DB.Exec(sql, req.Title, now, now)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
@@ -58,29 +58,39 @@ func GetTodos(c *gin.Context) {
 		}
 		todos = append(todos, todo)
 	}
-	c.JSON(http.StatusOK, gin.H{"todos": todos})
+
+	var responses []model.TodoResponse
+	for _, todo := range todos {
+		responses = append(responses, model.TodoResponse{
+			ID:        todo.ID,
+			Title:     todo.Title,
+			UpdatedAt: todo.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"todos": responses})
 }
 
 func UpdateTodo(c *gin.Context) {
 	id := c.Param("id")
-	var todo model.Todo
-	if err := c.ShouldBindJSON(&todo); err != nil {
-		c.Status(http.StatusInternalServerError)
+	var req model.UpdateTodoRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 
 	sql := "UPDATE todos SET title = ?, updated_at = ? WHERE id = ?"
 	now := time.Now()
 
-	result, err := db.DB.Exec(sql, todo.Title, now, id)
+	result, err := db.DB.Exec(sql, req.Title, now, id)
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 	if rowsAffected == 0 {
@@ -97,13 +107,13 @@ func DeleteTodo(c *gin.Context) {
 
 	result, err := db.DB.Exec(sql, id)
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.Status(http.StatusNotImplemented)
 		return
 	}
 	if rowsAffected == 0 {
