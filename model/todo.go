@@ -11,11 +11,13 @@ type Todo struct {
 }
 
 type CreateTodoRequest struct {
+	Title  string `json:"title"`
 	Title  string `json:"title" validate:"required"`
 	Status string `json:"status"`
 }
 
 type UpdateTodoRequest struct {
+	Title  string `json:"title"`
 	Title  string `json:"title" validate:"required"`
 	Status string `json:"status"`
 }

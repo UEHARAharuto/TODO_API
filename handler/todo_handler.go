@@ -18,6 +18,20 @@ func CreateTodo(c *gin.Context) {
 	var req model.CreateTodoRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	// リクエストでStatusが指定されなかった場合、デフォルト値 'pending' を設定
+	status := req.Status
+	if status == "" {
+		status = "pending"
+	}
+
+	sql := "INSERT INTO todos(title, status, created_at, updated_at) VALUES (?, ?, ?, ?)"
+	now := time.Now()
+
+	_, err := db.DB.Exec(sql, req.Title, status, now, now)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
@@ -65,6 +79,13 @@ func GetTodos(c *gin.Context) {
 	var rows *sql.Rows
 	var err error
 
+	sqlBase := "SELECT id, title, status, created_at, updated_at FROM todos"
+
+	if query != "" {
+		sql := sqlBase + " WHERE title LIKE ?"
+		rows, err = db.DB.Query(sql, "%"+query+"%")
+	} else {
+		sql := sqlBase
 	sqlBase := "SELECT id, title, priority, created_at, updated_at FROM todos"
 	sqlOrder := "ORDER BY priority ASC"
 
@@ -119,6 +140,14 @@ func UpdateTodo(c *gin.Context) {
 	var req model.UpdateTodoRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	sql := "UPDATE todos SET title = ?, status = ?, updated_at = ? WHERE id = ?"
+	now := time.Now()
+
+	result, err := db.DB.Exec(sql, req.Title, req.Status, now, id)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
