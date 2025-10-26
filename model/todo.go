@@ -12,15 +12,15 @@ type Todo struct {
 }
 
 type CreateTodoRequest struct {
-	Title    string `json:"title" validate:"required"`
-	Status   string `json:"status"`
-	Priority int    `json:"priority"`
+	Title    string  `json:"title" validate:"required"` // Titleは必須
+	Status   *string `json:"status"`                    // オプショナル（ポインタ型）
+	Priority *int    `json:"priority"`                  // オプショナル（ポインタ型）
 }
 
 type UpdateTodoRequest struct {
-	Title    string `json:"title" validate:"required"`
-	Status   string `json:"status"`
-	Priority int    `json:"priority"`
+	Title    *string `json:"title"`    // オプショナル（ポインタ型）
+	Status   *string `json:"status"`   // オプショナル（ポインタ型）
+	Priority *int    `json:"priority"` // オプショナル（ポインタ型）
 }
 
 type TodoResponse struct {
