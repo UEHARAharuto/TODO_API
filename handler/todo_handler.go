@@ -4,6 +4,7 @@ import (
 	"TODO_API/db"
 	"TODO_API/model"
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -22,6 +23,7 @@ func CreateTodo(c *gin.Context) {
 
 	_, err := db.DB.Exec(sql, req.Title, now, now)
 	if err != nil {
+		log.Printf("ERROR: Failed to create todo: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -43,6 +45,7 @@ func GetTodos(c *gin.Context) {
 	}
 
 	if err != nil {
+		log.Printf("ERROR: Failed to get todos: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -53,6 +56,7 @@ func GetTodos(c *gin.Context) {
 		var todo model.Todo
 		err := rows.Scan(&todo.ID, &todo.Title, &todo.CreatedAt, &todo.UpdatedAt)
 		if err != nil {
+			log.Printf("ERROR: Failed to scan todo row: %v", err)
 			c.Status(http.StatusInternalServerError)
 			return
 		}
@@ -84,12 +88,14 @@ func UpdateTodo(c *gin.Context) {
 
 	result, err := db.DB.Exec(sql, req.Title, now, id)
 	if err != nil {
+		log.Printf("ERROR: Failed to update todo: %v", err)
 		c.Status(http.StatusNotImplemented)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
+		log.Printf("ERROR: Failed to get rows affected on update: %v", err)
 		c.Status(http.StatusNotImplemented)
 		return
 	}
@@ -107,12 +113,14 @@ func DeleteTodo(c *gin.Context) {
 
 	result, err := db.DB.Exec(sql, id)
 	if err != nil {
+		log.Printf("ERROR: Failed to delete todo: %v", err)
 		c.Status(http.StatusNotImplemented)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
+		log.Printf("ERROR: Failed to get rows affected on delete: %v", err)
 		c.Status(http.StatusNotImplemented)
 		return
 	}
