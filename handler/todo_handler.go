@@ -27,30 +27,15 @@ func CreateTodo(c *gin.Context) {
 		return
 	}
 
-	sql := "INSERT INTO todos(title, status, created_at, updated_at) VALUES (?, ?, ?, ?)"
-	now := time.Now()
-
 	status := req.Status
 	if status == "" {
 		status = "pending"
 	}
 
-	_, err := db.DB.Exec(sql, req.Title, status, now, now)
-	var todo model.Todo
-	if err := c.ShouldBindJSON(&todo); err != nil {
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-
-	priority := todo.Priority
-	if priority == 0 {
-		priority = 100
-	}
-
-	sql := "INSERT INTO todos(title, priority, created_at, updated_at) VALUES (?, ?, ?, ?)"
+	sql := "INSERT INTO todos(title, status, priority, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
 	now := time.Now()
 
-	_, err := db.DB.Exec(sql, todo.Title, priority, now, now)
+	_, err := db.DB.Exec(sql, req.Title, status, 100, now, now)
 	if err != nil {
 		log.Printf("ERROR: Failed to create todo: %v", err)
 		c.Status(http.StatusInternalServerError)
@@ -65,18 +50,14 @@ func GetTodos(c *gin.Context) {
 	var rows *sql.Rows
 	var err error
 
-	sqlBase := "SELECT id, title, priority, created_at, updated_at FROM todos"
-	sqlOrder := "ORDER BY priority ASC"
+	sqlBase := "SELECT id, title, status, priority, created_at, updated_at FROM todos"
+	sqlOrder := " ORDER BY priority ASC"
 
 	if query != "" {
-		sql := "SELECT id, title, status, created_at, updated_at FROM todos WHERE title LIKE ?"
+		sql := sqlBase + " WHERE title LIKE ?" + sqlOrder
 		rows, err = db.DB.Query(sql, "%"+query+"%")
 	} else {
-		sql := "SELECT id, title, status, created_at, updated_at FROM todos"
-		sql := sqlBase + " WHERE title LIKE ? " + sqlOrder
-		rows, err = db.DB.Query(sql, "%"+query+"%")
-	} else {
-		sql := sqlBase + " " + sqlOrder
+		sql := sqlBase + sqlOrder
 		rows, err = db.DB.Query(sql)
 	}
 
@@ -90,8 +71,7 @@ func GetTodos(c *gin.Context) {
 	var todos []model.Todo
 	for rows.Next() {
 		var todo model.Todo
-		err := rows.Scan(&todo.ID, &todo.Title, &todo.Status, &todo.CreatedAt, &todo.UpdatedAt)
-		err := rows.Scan(&todo.ID, &todo.Title, &todo.Priority, &todo.CreatedAt, &todo.UpdatedAt)
+		err := rows.Scan(&todo.ID, &todo.Title, &todo.Status, &todo.Priority, &todo.CreatedAt, &todo.UpdatedAt)
 		if err != nil {
 			log.Printf("ERROR: Failed to scan todo row: %v", err)
 			c.Status(http.StatusInternalServerError)
@@ -106,12 +86,13 @@ func GetTodos(c *gin.Context) {
 			ID:        todo.ID,
 			Title:     todo.Title,
 			Status:    todo.Status,
+			Priority:  todo.Priority,
+			CreatedAt: todo.CreatedAt,
 			UpdatedAt: todo.UpdatedAt,
 		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{"todos": responses})
-	c.JSON(http.StatusOK, gin.H{"todos": todos})
 }
 
 func UpdateTodo(c *gin.Context) {
@@ -133,33 +114,15 @@ func UpdateTodo(c *gin.Context) {
 
 	result, err := db.DB.Exec(sql, req.Title, req.Status, now, id)
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
-	var todo model.Todo
-	if err := c.ShouldBindJSON(&todo); err != nil {
-		c.Status(http.StatusNotImplemented)
-		return
-	}
-
-	priority := todo.Priority
-	if priority == 0 {
-		priority = 100
-	}
-
-	sql := "UPDATE todos SET title = ?, priority = ?, updated_at = ? WHERE id = ?"
-	now := time.Now()
-
-	result, err := db.DB.Exec(sql, todo.Title, priority, now, id)
-	if err != nil {
 		log.Printf("ERROR: Failed to update todo: %v", err)
-		c.Status(http.StatusNotImplemented)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
 		log.Printf("ERROR: Failed to get rows affected on update: %v", err)
-		c.Status(http.StatusNotImplemented)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 	if rowsAffected == 0 {
@@ -176,17 +139,15 @@ func DeleteTodo(c *gin.Context) {
 
 	result, err := db.DB.Exec(sql, id)
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
 		log.Printf("ERROR: Failed to delete todo: %v", err)
-		c.Status(http.StatusNotImplemented)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
 		log.Printf("ERROR: Failed to get rows affected on delete: %v", err)
-		c.Status(http.StatusNotImplemented)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 	if rowsAffected == 0 {
