@@ -11,14 +11,14 @@ import (
 )
 
 func CreateTodo(c *gin.Context) {
-	var todo model.Todo
-	if err := c.ShouldBindJSON(&todo); err != nil {
+	var req model.CreateTodoRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
 
 	// リクエストでStatusが指定されなかった場合、デフォルト値 'pending' を設定
-	status := todo.Status
+	status := req.Status
 	if status == "" {
 		status = "pending"
 	}
@@ -26,7 +26,7 @@ func CreateTodo(c *gin.Context) {
 	sql := "INSERT INTO todos(title, status, created_at, updated_at) VALUES (?, ?, ?, ?)"
 	now := time.Now()
 
-	_, err := db.DB.Exec(sql, todo.Title, status, now, now)
+	_, err := db.DB.Exec(sql, req.Title, status, now, now)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
@@ -72,23 +72,24 @@ func GetTodos(c *gin.Context) {
 
 func UpdateTodo(c *gin.Context) {
 	id := c.Param("id")
-	var todo model.Todo
-	if err := c.ShouldBindJSON(&todo); err != nil {
-		c.Status(http.StatusNotImplemented)
+	var req model.UpdateTodoRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
 	sql := "UPDATE todos SET title = ?, status = ?, updated_at = ? WHERE id = ?"
 	now := time.Now()
 
-	result, err := db.DB.Exec(sql, todo.Title, todo.Status, now, id)
+	result, err := db.DB.Exec(sql, req.Title, req.Status, now, id)
 	if err != nil {
-		c.Status(http.StatusNotImplemented)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
+		c.Status(http.StatusNotImplemented)
 		c.Status(http.StatusNotImplemented)
 		return
 	}
