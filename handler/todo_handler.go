@@ -12,16 +12,21 @@ import (
 )
 
 func CreateTodo(c *gin.Context) {
-	var req model.CreateTodoRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var todo model.Todo
+	if err := c.ShouldBindJSON(&todo); err != nil {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	sql := "INSERT INTO todos(title, created_at, updated_at) VALUES (?, ?, ?)"
+	priority := todo.Priority
+	if priority == 0 {
+		priority = 100
+	}
+
+	sql := "INSERT INTO todos(title, priority, created_at, updated_at) VALUES (?, ?, ?, ?)"
 	now := time.Now()
 
-	_, err := db.DB.Exec(sql, req.Title, now, now)
+	_, err := db.DB.Exec(sql, todo.Title, priority, now, now)
 	if err != nil {
 		log.Printf("ERROR: Failed to create todo: %v", err)
 		c.Status(http.StatusInternalServerError)
@@ -36,11 +41,14 @@ func GetTodos(c *gin.Context) {
 	var rows *sql.Rows
 	var err error
 
+	sqlBase := "SELECT id, title, priority, created_at, updated_at FROM todos"
+	sqlOrder := "ORDER BY priority ASC"
+
 	if query != "" {
-		sql := "SELECT id, title, created_at, updated_at FROM todos WHERE title LIKE ?"
+		sql := sqlBase + " WHERE title LIKE ? " + sqlOrder
 		rows, err = db.DB.Query(sql, "%"+query+"%")
 	} else {
-		sql := "SELECT id, title, created_at, updated_at FROM todos"
+		sql := sqlBase + " " + sqlOrder
 		rows, err = db.DB.Query(sql)
 	}
 
@@ -54,7 +62,7 @@ func GetTodos(c *gin.Context) {
 	var todos []model.Todo
 	for rows.Next() {
 		var todo model.Todo
-		err := rows.Scan(&todo.ID, &todo.Title, &todo.CreatedAt, &todo.UpdatedAt)
+		err := rows.Scan(&todo.ID, &todo.Title, &todo.Priority, &todo.CreatedAt, &todo.UpdatedAt)
 		if err != nil {
 			log.Printf("ERROR: Failed to scan todo row: %v", err)
 			c.Status(http.StatusInternalServerError)
@@ -63,30 +71,26 @@ func GetTodos(c *gin.Context) {
 		todos = append(todos, todo)
 	}
 
-	var responses []model.TodoResponse
-	for _, todo := range todos {
-		responses = append(responses, model.TodoResponse{
-			ID:        todo.ID,
-			Title:     todo.Title,
-			UpdatedAt: todo.UpdatedAt,
-		})
-	}
-
-	c.JSON(http.StatusOK, gin.H{"todos": responses})
+	c.JSON(http.StatusOK, gin.H{"todos": todos})
 }
 
 func UpdateTodo(c *gin.Context) {
 	id := c.Param("id")
-	var req model.UpdateTodoRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var todo model.Todo
+	if err := c.ShouldBindJSON(&todo); err != nil {
 		c.Status(http.StatusNotImplemented)
 		return
 	}
 
-	sql := "UPDATE todos SET title = ?, updated_at = ? WHERE id = ?"
+	priority := todo.Priority
+	if priority == 0 {
+		priority = 100
+	}
+
+	sql := "UPDATE todos SET title = ?, priority = ?, updated_at = ? WHERE id = ?"
 	now := time.Now()
 
-	result, err := db.DB.Exec(sql, req.Title, now, id)
+	result, err := db.DB.Exec(sql, todo.Title, priority, now, id)
 	if err != nil {
 		log.Printf("ERROR: Failed to update todo: %v", err)
 		c.Status(http.StatusNotImplemented)
